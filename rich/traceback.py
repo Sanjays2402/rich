@@ -542,19 +542,28 @@ class Traceback:
                 last_instruction = None
                 if sys.version_info >= (3, 11):
                     instruction_index = frame_summary.f_lasti // 2
-                    instruction_position = next(
-                        islice(
-                            frame_summary.f_code.co_positions(),
-                            instruction_index,
-                            instruction_index + 1,
+                    instruction_position = (
+                        next(
+                            islice(
+                                frame_summary.f_code.co_positions(),
+                                instruction_index,
+                                instruction_index + 1,
+                            ),
+                            None,
                         )
+                        # A frame that has not started executing yet (e.g. a
+                        # suspended generator) reports ``f_lasti == -1``, which
+                        # would make ``instruction_index`` negative and cause
+                        # ``islice`` to raise a ``ValueError``.
+                        if instruction_index >= 0
+                        else None
                     )
                     (
                         start_line,
                         end_line,
                         start_column,
                         end_column,
-                    ) = instruction_position
+                    ) = instruction_position or (None, None, None, None)
                     if (
                         start_line is not None
                         and end_line is not None

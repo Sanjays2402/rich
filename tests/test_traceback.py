@@ -361,6 +361,40 @@ def test_traceback_finely_grained() -> None:
 
 
 @pytest.mark.skipif(
+    sys.version_info.minor < 11, reason="Not applicable before Python 3.11"
+)
+def test_traceback_not_started_frame(monkeypatch) -> None:
+    """A frame that has not started executing reports ``f_lasti == -1``.
+
+    Extracting a traceback that includes such a frame should not raise a
+    ``ValueError`` from ``islice`` (see issue #3607).
+    """
+    import rich.traceback as traceback_module
+
+    class FakeCode:
+        co_filename = "fake.py"
+        co_name = "fake"
+
+        def co_positions(self):
+            return iter([(1, 1, 0, 0)])
+
+    class FakeFrame:
+        f_lasti = -1
+        f_code = FakeCode()
+        f_locals: dict = {}
+
+    monkeypatch.setattr(traceback_module, "walk_tb", lambda tb: [(FakeFrame(), 1)])
+
+    try:
+        raise ValueError("boom")
+    except ValueError as error:
+        trace = Traceback.extract(type(error), error, error.__traceback__)
+
+    frame = trace.stacks[-1].frames[-1]
+    assert frame.last_instruction is None
+
+
+@pytest.mark.skipif(
     sys.version_info.minor < 11, reason="Not supported before Python 3.11"
 )
 def test_notes() -> None:
