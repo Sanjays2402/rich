@@ -110,6 +110,33 @@ def cell_len(text: str, unicode_version: str = "auto") -> int:
     return _cell_len(text, unicode_version)
 
 
+def cell_len_with_tabs(text: str, tab_size: int) -> int:
+    """Get the cell length of a string once tabs have been expanded to tab stops.
+
+    A tab is not zero-width when rendered: the console advances the cursor to
+    the next multiple of ``tab_size``. This mirrors how ``Text`` and ``Syntax``
+    expand tabs before drawing, so text containing tabs measures the same width
+    it actually occupies on screen (which ``cell_len`` under-reports).
+
+    Args:
+        text: String to measure (may contain ``"\\t"``).
+        tab_size: The tab stop interval, e.g. 8 for ``Text`` or 4 for ``Syntax``.
+
+    Returns:
+        Length of the string in terminal cells, tabs expanded.
+    """
+    width = 0
+    for character in text:
+        if character == "\t":
+            width += 1
+            remainder = width % tab_size
+            if remainder:
+                width += tab_size - remainder
+        else:
+            width += get_character_cell_size(character)
+    return width
+
+
 def _cell_len(text: str, unicode_version: str) -> int:
     """Get the cell length of a string (length as it appears in the terminal).
 

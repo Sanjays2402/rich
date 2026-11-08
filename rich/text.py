@@ -8,7 +8,7 @@ from ._loop import loop_last
 from ._pick import pick_bool
 from ._wrap import divide_line
 from .align import AlignMethod
-from .cells import cell_len, set_cell_size
+from .cells import cell_len, cell_len_with_tabs, set_cell_size
 from .containers import Lines
 from .control import strip_control_codes
 from .emoji import EmojiVariant
@@ -697,7 +697,12 @@ class Text(JupyterMixin):
     ) -> Measurement:
         text = self.plain
         lines = text.splitlines()
-        max_text_width = max(cell_len(line) for line in lines) if lines else 0
+        tab_size = self.tab_size if self.tab_size is not None else console.tab_size
+        if not tab_size:
+            tab_size = 8
+        max_text_width = (
+            max(cell_len_with_tabs(line, tab_size) for line in lines) if lines else 0
+        )
         words = text.split()
         min_text_width = (
             max(cell_len(word) for word in words) if words else max_text_width

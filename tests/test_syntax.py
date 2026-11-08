@@ -402,6 +402,19 @@ def test_syntax_measure() -> None:
     assert code.__rich_measure__(console, console.options) == Measurement(3, 24)
 
 
+def test_syntax_measure_with_tabs() -> None:
+    # Tabs must be measured at the width they render at (expanded to tab
+    # stops), not as zero-width
+    console = Console()
+    # "\t" expands to 4 spaces (Syntax default tab_size), so the indented
+    # line is 4 + 8 = 12 cells wide
+    code = Syntax("def f():\n\treturn 1", "python")
+    assert code.__rich_measure__(console, console.options) == Measurement(0, 12)
+    # and a custom tab_size is respected
+    code = Syntax("def f():\n\treturn 1", "python", tab_size=8)
+    assert code.__rich_measure__(console, console.options) == Measurement(0, 16)
+
+
 def test_background_color_override_includes_padding() -> None:
     """Regression test for https://github.com/Textualize/rich/issues/3295"""
 

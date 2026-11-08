@@ -320,6 +320,21 @@ def test_console_width():
     assert Text(" \n  \n   ").__rich_measure__(console, 80) == Measurement(3, 3)
 
 
+def test_measure_with_tabs():
+    # Tabs must be measured at the width they render at (expanded to tab
+    # stops), not as zero-width
+    console = Console()
+    assert Text("ab\tcd").__rich_measure__(console, console.options) == Measurement(
+        2, 10
+    )
+    # an explicit tab_size is respected
+    assert Text("ab\tcd", tab_size=4).__rich_measure__(
+        console, console.options
+    ) == Measurement(2, 6)
+    # a leading tab advances to the first tab stop
+    assert Text("\txy").__rich_measure__(console, console.options) == Measurement(2, 10)
+
+
 def test_join():
     text = Text("bar").join([Text("foo", "red"), Text("baz", "blue")])
     assert str(text) == "foobarbaz"

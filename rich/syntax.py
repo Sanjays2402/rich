@@ -33,7 +33,7 @@ from rich.containers import Lines
 from rich.padding import Padding, PaddingDimensions
 
 from ._loop import loop_first
-from .cells import cell_len
+from .cells import cell_len_with_tabs
 from .color import Color, blend_rgb
 from .jupyter import JupyterMixin
 from .measure import Measurement
@@ -621,7 +621,11 @@ class Syntax(JupyterMixin):
         width = (
             self._numbers_column_width
             + padding
-            + (max(cell_len(line) for line in lines) if lines else 0)
+            + (
+                max(cell_len_with_tabs(line, self.tab_size) for line in lines)
+                if lines
+                else 0
+            )
         )
         if self.line_numbers:
             width += 1
